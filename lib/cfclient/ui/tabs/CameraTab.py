@@ -88,29 +88,50 @@ class CameraTab(Tab, camera_tab_class):
 		self._helper.cf.disconnected.add_callback(
 			self._disconnected_signal.emit)
 
-		self.button_startstop.clicked.connect(self._button_clicked)
+		# regiser PushButton click event handlers
+		self.button_startstop.clicked.connect(self._button_startstop_clicked)
+		self.button_snapshot.clicked.connect(self._button_snapshot_clicked)
 
+		# internal state variables
 		self.webcam = None
+		self.capturing = False
 
+		# use a QTimer to redraw the screen when capturing
 		self.timer = QTimer(self)
 		self.timer.timeout.connect(self.draw_webcam)
-		self.timer.setInterval(1000/24)
+		self.timer.setInterval(1000/24) # 1000/framerate
 		
 
-	def _button_clicked(self):
+	def _button_startstop_clicked(self):
 		logger.info("pushButton Clicked callback")
 
-		if not self.timer.isActive():
+		# not running, so start
+		if not self.capturing:
+			# open webcam (should always be None when stopped, but do this for error checking)
 			if self.webcam is None:
 				self.webcam = cv2.VideoCapture(int(self.spinbox_webcam_number.value()))
+
+			# update buttons
 			self.button_startstop.setText("Stop Camera")
+			self.button_snapshot.setEnabled(True)
+
+			# start capturing
 			self.timer.start()
+			self.capturing = True
 		else:
+			# stop capturing and release webcam
 			self.timer.stop()
 			if self.webcam is not None:
 				self.webcam.release()
 				self.webcam = None
+
+			# update buttons
 			self.button_startstop.setText("Start Camera")
+			self.button_snapshot.setEnabled(False)
+			self.capturing = False
+
+	def _button_snapshot_clicked(self):
+		logger.info("Snapshot taken")
 
 	def draw_webcam(self):
 		if self.webcam is not None:
@@ -130,6 +151,7 @@ class CameraTab(Tab, camera_tab_class):
 
 	def _disconnected(self, link_uri):
 		"""Callback for when the Crazyflie has been disconnected"""
+		# release webcam if it's connected
 		if self.webcam is not None:
 			self.webcam.release()
 

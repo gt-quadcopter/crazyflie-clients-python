@@ -4,6 +4,7 @@ syntax: glob
 config.json
 dist/*
 build/*
+*.swp
 # PC client settings
 conf/*
 
