@@ -1,0 +1,21 @@
+{
+  "client_side_xmode": false, 
+  "link_uri": "", 
+  "input_device": "", 
+  "slew_limit": 45, 
+  "max_rp": 30, 
+  "enable_input_muxing": false, 
+  "trim_pitch": 0.0, 
+  "device_config_mapping": {}, 
+  "slew_rate": 30, 
+  "auto_reconnect": false, 
+  "max_yaw": 200, 
+  "flightmode": "Normal", 
+  "enable_debug_driver": false, 
+  "ui_update_period": 100, 
+  "open_tabs": "Flight Control,Camera", 
+  "input_device_blacklist": "(VirtualBox|VMware)", 
+  "trim_roll": 0.0, 
+  "max_thrust": 80, 
+  "min_thrust": 25
+}

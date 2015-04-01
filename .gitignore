@@ -1,12 +1,12 @@
 syntax: glob
 *.pyc
 *~
-config.json
+#config.json
 dist/*
 build/*
 *.swp
 # PC client settings
-conf/*
+#conf/*
 
 # Eclipse settings
 .project
