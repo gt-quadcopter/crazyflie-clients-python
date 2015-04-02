@@ -5,9 +5,9 @@ syntax: glob
 dist/*
 build/*
 *.swp
-# PC client settings
 #conf/*
 conf/cache/*
+snapshots/*
 
 # Eclipse settings
 .project

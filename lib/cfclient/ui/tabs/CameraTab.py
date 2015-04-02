@@ -36,7 +36,7 @@ __author__ = 'Bitcraze AB'
 __all__ = ['CameraTab']
 
 import logging
-import sys
+import sys, os
 
 logger = logging.getLogger(__name__)
 
@@ -50,9 +50,11 @@ from cflib.crazyflie.log import LogConfig, Log
 from cflib.crazyflie.param import Param
 
 import pdb
+from datetime import datetime
 
 try:
 	import cv2
+	import numpy as np
 	should_enable_tab = True
 except:
 	should_enable_tab = False
@@ -114,8 +116,6 @@ class CameraTab(Tab, camera_tab_class):
 
 
 	def _button_startstop_clicked(self):
-		logger.info("pushButton Clicked callback")
-
 		# not running, so start
 		if not self.capturing:
 			# open webcam (should always be None when stopped, but do this for error checking)
@@ -142,16 +142,51 @@ class CameraTab(Tab, camera_tab_class):
 			self.capturing = False
 
 	def _button_snapshot_clicked(self):
-		logger.info("Snapshot taken")
+		timestr = str(datetime.now()) # get timestamp to use as filename
+		filename = 'snapshot_' + timestr[:-3].replace(':', '.').replace(' ', '_') + '.jpg'
+		filepath = os.path.join(os.getcwd(), 'snapshots', filename)
+		cv2.imwrite(filepath, self.current_frame)
+
+		logger.info("%dx%d Saved snapshot to "%(self.frame_width, self.frame_height) + filepath)
 
 	def draw_webcam(self):
-		logger.info("[%d, %d]"%(self.label_video.width(), self.label_video.height()))
+		#logger.info("[%d, %d]"%(self.label_video.width(), self.label_video.height()))
 		if self.webcam is not None:
-			ret, cvimg = self.webcam.read()
-			height, width, byteValue = cvimg.shape
+			# read a frame from the webcam
+			ret, self.current_frame = self.webcam.read()
+			frame_height, frame_width, frame_byteValue = self.current_frame.shape
+			frame_ratio = float(frame_width) / float(frame_height)
+
+			self.frame_height = frame_height
+			self.frame_width = frame_width
+
+			# get current size of the display label
+			label_height = self.label_video.height()
+			label_width = self.label_video.width()
+			label_ratio = float(label_width) / float(label_height)
+
+			if label_ratio < frame_ratio: # label is narrower, so add letterbox bars
+				new_height = int(round(frame_width / label_ratio))
+				border_height = int(round((new_height - frame_height) / 2))
+				
+				# add borders                     input img, top,          bottom,      left, right
+				border_img = cv2.copyMakeBorder(self.current_frame, border_height, border_height, 0,  0,
+						                          # solid border,        border color
+													cv2.BORDER_CONSTANT, value=[255,255,255])
+
+			elif label_ratio > frame_ratio: # wider, so pillarbox
+				new_width = int(round(frame_height * label_ratio))
+				border_width = int(round((new_width - frame_width) / 2))
+				border_img = cv2.copyMakeBorder(self.current_frame, 0, 0, border_width, border_width,
+													cv2.BORDER_CONSTANT, value=[255,255,255])
+
+			else: # same dimensions, so no border needed
+				border_img = self.current_frame
+
+			height, width, byteValue = border_img.shape
 			byteValue = byteValue * width
-			cv2.cvtColor(cvimg, cv2.COLOR_BGR2RGB, cvimg)
-			qimg = QImage(cvimg, width, height, byteValue, QImage.Format_RGB888)
+			cv2.cvtColor(border_img, cv2.COLOR_BGR2RGB, border_img)
+			qimg = QImage(border_img, width, height, byteValue, QImage.Format_RGB888)
 
 			self.label_video.setPixmap(QPixmap.fromImage(qimg))
 

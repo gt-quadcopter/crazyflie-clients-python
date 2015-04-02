@@ -10,7 +10,7 @@
     "HID DEVICE": "mbed Joystick"
   }, 
   "slew_rate": 50.0, 
-  "auto_reconnect": true, 
+  "auto_reconnect": false, 
   "max_yaw": 200, 
   "flightmode": "Advanced", 
   "enable_debug_driver": false, 
