@@ -1,0 +1,23 @@
+{
+  "client_side_xmode": true, 
+  "link_uri": "radio://0/10/250K", 
+  "input_device": "HID DEVICE", 
+  "slew_limit": 40.0, 
+  "max_rp": 30, 
+  "ui_update_period": 100, 
+  "trim_pitch": -6.0, 
+  "device_config_mapping": {
+    "HID DEVICE": "mbed Joystick"
+  }, 
+  "slew_rate": 50.0, 
+  "auto_reconnect": true, 
+  "max_yaw": 200, 
+  "flightmode": "Advanced", 
+  "enable_debug_driver": false, 
+  "enable_input_muxing": false, 
+  "open_tabs": "Flight Control,Camera", 
+  "input_device_blacklist": "(VirtualBox|VMware)", 
+  "trim_roll": -4.4, 
+  "max_thrust": 78.0, 
+  "min_thrust": 25.0
+}
