@@ -50,7 +50,12 @@ from cflib.crazyflie.log import LogConfig, Log
 from cflib.crazyflie.param import Param
 
 import pdb
-import cv2
+
+try:
+	import cv2
+	should_enable_tab = True
+except:
+	should_enable_tab = False
 
 camera_tab_class = uic.loadUiType(sys.path[0] +
 								"/cfclient/ui/tabs/cameraTab.ui")[0]
@@ -71,8 +76,14 @@ class CameraTab(Tab, camera_tab_class):
 		self.tabName = "Camera"
 		self.menuName = "Camera Tab"
 		self.tabWidget = tabWidget
-
 		self._helper = helper
+
+		# Disable tab if we can't get the OpenCV library (prevents client from failing to start)
+		self.enabled = should_enable_tab
+		if not self.enabled:
+			logger.warning("Couldn't import OpenCV (cv2) library! "
+							"Camera tab is disabled")
+			return
 
 		# Always wrap callbacks from Crazyflie API though QT Signal/Slots
 		# to avoid manipulating the UI when rendering it
@@ -100,7 +111,7 @@ class CameraTab(Tab, camera_tab_class):
 		self.timer = QTimer(self)
 		self.timer.timeout.connect(self.draw_webcam)
 		self.timer.setInterval(1000/24) # 1000/framerate
-		
+
 
 	def _button_startstop_clicked(self):
 		logger.info("pushButton Clicked callback")
@@ -134,6 +145,7 @@ class CameraTab(Tab, camera_tab_class):
 		logger.info("Snapshot taken")
 
 	def draw_webcam(self):
+		logger.info("[%d, %d]"%(self.label_video.width(), self.label_video.height()))
 		if self.webcam is not None:
 			ret, cvimg = self.webcam.read()
 			height, width, byteValue = cvimg.shape

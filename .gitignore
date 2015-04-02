@@ -7,6 +7,7 @@ build/*
 *.swp
 # PC client settings
 #conf/*
+conf/cache/*
 
 # Eclipse settings
 .project
