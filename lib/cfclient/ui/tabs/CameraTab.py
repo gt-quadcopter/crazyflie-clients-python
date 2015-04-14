@@ -169,9 +169,9 @@ class CameraTab(Tab, camera_tab_class):
 				new_height = int(round(frame_width / label_ratio))
 				border_height = int(round((new_height - frame_height) / 2))
 				
-				# add borders                     input img, top,          bottom,      left, right
+				# add borders					  input img, top,		   bottom,		left, right
 				border_img = cv2.copyMakeBorder(self.current_frame, border_height, border_height, 0,  0,
-						                          # solid border,        border color
+												  # solid border,		 border color
 													cv2.BORDER_CONSTANT, value=[255,255,255])
 
 			elif label_ratio > frame_ratio: # wider, so pillarbox
@@ -196,26 +196,27 @@ class CameraTab(Tab, camera_tab_class):
 
 		logger.debug("Crazyflie connected to {}".format(link_uri))
 
-        #defining the logconfig
-                self._lg_stab = LogConfig(name="Stabilizer", period_in_ms = 100)
-                self._lg_stab.add_variable("stabilizer.roll","float")
-                self._lg_stab.add_variable("stabilizer.pitch", "float")
-                self._lg_stab.add_variable("stabilizer.yaw", "float")
-                
-                self._helper.cf.log.add_config(self._lg_stab)
-                if self._lg_Stab.valid:
-                        self._lg_stab.data_received_cb.add_callback(self._stab_log_data)
-                        self._lg_stab.error_cb.add_callback(self._stab_log_error)
-                        self._lg_Stab.start()
-                else:
-                        logger.debug("camera tab.py.. value not in TOC")
+		#defining the logconfig
+		self._lg_stab = LogConfig(name="Stabilizer", period_in_ms = 100)
+		self._lg_stab.add_variable("stabilizer.roll","float")
+		self._lg_stab.add_variable("stabilizer.pitch", "float")
+		self._lg_stab.add_variable("stabilizer.yaw", "float")
+		
+		self._helper.cf.log.add_config(self._lg_stab)
+		if self._lg_stab.valid:
+			self._lg_stab.data_received_cb.add_callback(self._stab_log_data)
+			self._lg_stab.error_cb.add_callback(self._stab_log_error)
+			self._lg_stab.start()
+		else:
+			logger.debug("camera tab.py.. value not in TOC")
 
-        def _stab_log_error(self, logconf, msg):
-                logger.debug("log error in camera tab")
-        def _stab_log_data(self, timestamp, data, logconf):
-                self.val1.setText(str(data['stabilizer.roll']))
-                self.val2.setText(str(data['stabilizer.pitch']))
-        
+	def _stab_log_error(self, logconf, msg):
+		logger.debug("log error in camera tab")
+
+	def _stab_log_data(self, timestamp, data, logconf):
+		self.val1.setText(str(data['stabilizer.roll']))
+		self.val2.setText(str(data['stabilizer.pitch']))
+		
 	def _disconnected(self, link_uri):
 		"""Callback for when the Crazyflie has been disconnected"""
 		# release webcam if it's connected
