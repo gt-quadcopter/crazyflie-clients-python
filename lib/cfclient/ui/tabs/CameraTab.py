@@ -196,16 +196,11 @@ class CameraTab(Tab, camera_tab_class):
 
 		logger.debug("Crazyflie connected to {}".format(link_uri))
 
-<<<<<<< HEAD
-        #defining the logconfig
-=======
 		#defining the logconfig
->>>>>>> ad934f0148ee2eb2a708dfee9c0781cf0aef9a51
 		self._lg_stab = LogConfig(name="Stabilizer", period_in_ms = 100)
 		self._lg_stab.add_variable("stabilizer.roll","float")
 		self._lg_stab.add_variable("stabilizer.pitch", "float")
 		self._lg_stab.add_variable("stabilizer.yaw", "float")
-<<<<<<< HEAD
                 
 		self._helper.cf.log.add_config(self._lg_stab)
 		if self._lg_stab.valid:
@@ -223,7 +218,6 @@ class CameraTab(Tab, camera_tab_class):
 		self.val1.setText(str(data['stabilizer.roll']))
 		self.val2.setText(str(data['stabilizer.pitch']))
         
-=======
 		
 		self._helper.cf.log.add_config(self._lg_stab)
 		if self._lg_stab.valid:
@@ -240,7 +234,7 @@ class CameraTab(Tab, camera_tab_class):
 		self.val1.setText(str(data['stabilizer.roll']))
 		self.val2.setText(str(data['stabilizer.pitch']))
 		
->>>>>>> ad934f0148ee2eb2a708dfee9c0781cf0aef9a51
+
 	def _disconnected(self, link_uri):
 		"""Callback for when the Crazyflie has been disconnected"""
 		# release webcam if it's connected
