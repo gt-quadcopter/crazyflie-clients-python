@@ -62,6 +62,17 @@ except:
 camera_tab_class = uic.loadUiType(sys.path[0] +
 								"/cfclient/ui/tabs/cameraTab.ui")[0]
 
+# set these appropriately for which channels the prox sensors
+# are connected to
+PROX_LEFT_LOGNAME  = 'adc.A0_f'
+PROX_RIGHT_LOGNAME = 'adc.A1_f'
+PROX_FRONT_LOGNAME = 'adc.A2_f'
+SONAR_LOGNAME =		 'adc.A3_f'
+
+PROX_LEFT_THRESHOLD  = 0.6;
+PROX_RIGHT_THRESHOLD = 0.6;
+PROX_FRONT_THRESHOLD = 0.6;
+
 class CameraTab(Tab, camera_tab_class):
 	"""Tab for plotting logging data"""
 
@@ -108,11 +119,34 @@ class CameraTab(Tab, camera_tab_class):
 		# internal state variables
 		self.webcam = None
 		self.capturing = False
+		self.connected = False
 
 		# use a QTimer to redraw the screen when capturing
 		self.timer = QTimer(self)
-		self.timer.timeout.connect(self.draw_webcam)
+		self.timer.timeout.connect(self._update_ui)
 		self.timer.setInterval(1000/24) # 1000/framerate
+		self.timer.start()
+
+		# set up array of dicts for updating prox sensors in a loop
+		self._prox_sensors = [
+			{'logname':		PROX_LEFT_LOGNAME,
+			 'threshold':	PROX_LEFT_THRESHOLD,
+			 'val_label':	self.label_left_val,
+			 'bar_label':	self.label_bar_left,
+			 'color':		'white'},
+
+			{'logname':		PROX_RIGHT_LOGNAME,
+			 'threshold':	PROX_RIGHT_THRESHOLD,
+			 'val_label':	self.label_right_val,
+			 'bar_label':	self.label_bar_right,
+			 'color':		'white'},
+
+			{'logname':		PROX_FRONT_LOGNAME,
+			 'threshold':	PROX_FRONT_THRESHOLD,
+			 'val_label':	self.label_front_val,
+			 'bar_label':	self.label_bar_front,
+			 'color':		'white'}]
+
 
 
 	def _button_startstop_clicked(self):
@@ -127,11 +161,11 @@ class CameraTab(Tab, camera_tab_class):
 			self.button_snapshot.setEnabled(True)
 
 			# start capturing
-			self.timer.start()
+			#self.timer.start()
 			self.capturing = True
 		else:
 			# stop capturing and release webcam
-			self.timer.stop()
+			#self.timer.stop()
 			if self.webcam is not None:
 				self.webcam.release()
 				self.webcam = None
@@ -160,7 +194,14 @@ class CameraTab(Tab, camera_tab_class):
 
 		logger.info("%dx%d Saved snapshot to "%(self.frame_width, self.frame_height) + filepath)
 
-	def draw_webcam(self):
+	def _update_ui(self):
+		for sensor in self._prox_sensors:
+			stylesheet = 'background-color: %s;'%sensor['color']
+			sensor['bar_label'].setStyleSheet(stylesheet)
+
+		self._draw_webcam()
+
+	def _draw_webcam(self):
 		if self.webcam is not None:
 			# read a frame from the webcam
 			ret, self.current_frame = self.webcam.read()
@@ -207,49 +248,41 @@ class CameraTab(Tab, camera_tab_class):
 		logger.debug("Crazyflie connected to {}".format(link_uri))
 
 		#defining the logconfig
-		self._lg_stab = LogConfig(name="Stabilizer", period_in_ms = 100)
-		self._lg_stab.add_variable("stabilizer.roll","float")
-		self._lg_stab.add_variable("stabilizer.pitch", "float")
-		self._lg_stab.add_variable("stabilizer.yaw", "float")
+		self._log_adc = LogConfig(name="ADC", period_in_ms = 50)
+		self._log_adc.add_variable("adc.A0_f","float")
+		self._log_adc.add_variable("adc.A1_f", "float")
+		self._log_adc.add_variable("adc.A2_f", "float")
+		self._log_adc.add_variable("adc.A3_f", "float")
 				
-		self._helper.cf.log.add_config(self._lg_stab)
-		if self._lg_stab.valid:
-			self._lg_stab.data_received_cb.add_callback(self._stab_log_data)
-			self._lg_stab.error_cb.add_callback(self._stab_log_error)
-			self._lg_stab.start()
+		# add log config and activate callbacks if successful
+		self._helper.cf.log.add_config(self._log_adc)
+		if self._log_adc.valid:
+			self._log_adc.data_received_cb.add_callback(self._log_adc_data)
+			self._log_adc.error_cb.add_callback(self._log_adc_error)
+			self._log_adc.start()
 		else:
-			logger.debug("camera tab.py.. value not in TOC")
+			logger.warn("CameraTab: Unable to start ADC logging")
 			
 			
-	def _stab_log_error(self, logconf, msg):
-		logger.debug("log error in camera tab")
+	def _log_adc_error(self, logconf, msg):
+		logger.warn("CameraTab: log error!")
 	
-	def _stab_log_data(self, timestamp, data, logconf): 
-		self.val1.setText(str(data['stabilizer.roll']))
-		self.val2.setText(str(data['stabilizer.pitch']))
-		
-		
-		self._helper.cf.log.add_config(self._lg_stab)
-		if self._lg_stab.valid:
-			self._lg_stab.data_received_cb.add_callback(self._stab_log_data)
-			self._lg_stab.error_cb.add_callback(self._stab_log_error)
-			self._lg_stab.start()
-		else:
-			logger.debug("camera tab.py.. value not in TOC")
 
-	def _stab_log_error(self, logconf, msg):
-		logger.debug("log error in camera tab")
-
-	def _stab_log_data(self, timestamp, data, logconf):
-		self.val1.setText(str(data['stabilizer.roll']))
-		self.val2.setText(str(data['stabilizer.pitch']))
+	# callback function when adc log data is received
+	def _log_adc_data(self, timestamp, data, logconf): 
+		# update UI data for each proximity sensor
+		for sensor in self._prox_sensors:
+			value = data[sensor['logname']]
+			sensor['val_label'].setText('%1.3f'%value)
+			if value > sensor['threshold']:
+				sensor['color'] = 'red'
+			else:
+				sensor['color'] = 'white'
 		
 
 	def _disconnected(self, link_uri):
 		"""Callback for when the Crazyflie has been disconnected"""
-		# release webcam if it's connected
-		if self.webcam is not None:
-			self.webcam.release()
+		pass
 
 		logger.debug("Crazyflie disconnected from {}".format(link_uri))
 
