@@ -144,13 +144,23 @@ class CameraTab(Tab, camera_tab_class):
 	def _button_snapshot_clicked(self):
 		timestr = str(datetime.now()) # get timestamp to use as filename
 		filename = 'snapshot_' + timestr[:-3].replace(':', '.').replace(' ', '_') + '.jpg'
-		filepath = os.path.join(os.getcwd(), 'snapshots', filename)
+
+		# check if running from bin dir
+		if os.path.basename(os.getcwd()) == 'bin':
+			snapshotdir = os.path.join(os.getcwd(), os.pardir, 'snapshots')
+		else:
+			snapshotdir = os.path.join(os.getcwd(), 'snapshots')
+
+		# create snapshot directory if needed
+		if not os.path.isdir(snapshotdir):
+			os.mkdir(snapshotdir)
+
+		filepath = os.path.join(snapshotdir, filename)
 		cv2.imwrite(filepath, self.current_frame)
 
 		logger.info("%dx%d Saved snapshot to "%(self.frame_width, self.frame_height) + filepath)
 
 	def draw_webcam(self):
-		#logger.info("[%d, %d]"%(self.label_video.width(), self.label_video.height()))
 		if self.webcam is not None:
 			# read a frame from the webcam
 			ret, self.current_frame = self.webcam.read()
@@ -201,23 +211,23 @@ class CameraTab(Tab, camera_tab_class):
 		self._lg_stab.add_variable("stabilizer.roll","float")
 		self._lg_stab.add_variable("stabilizer.pitch", "float")
 		self._lg_stab.add_variable("stabilizer.yaw", "float")
-                
+				
 		self._helper.cf.log.add_config(self._lg_stab)
 		if self._lg_stab.valid:
-				self._lg_stab.data_received_cb.add_callback(self._stab_log_data)
-				self._lg_stab.error_cb.add_callback(self._stab_log_error)
-				self._lg_stab.start()
+			self._lg_stab.data_received_cb.add_callback(self._stab_log_data)
+			self._lg_stab.error_cb.add_callback(self._stab_log_error)
+			self._lg_stab.start()
 		else:
-				logger.debug("camera tab.py.. value not in TOC")
-            
-            
+			logger.debug("camera tab.py.. value not in TOC")
+			
+			
 	def _stab_log_error(self, logconf, msg):
 		logger.debug("log error in camera tab")
-    
+	
 	def _stab_log_data(self, timestamp, data, logconf): 
 		self.val1.setText(str(data['stabilizer.roll']))
 		self.val2.setText(str(data['stabilizer.pitch']))
-        
+		
 		
 		self._helper.cf.log.add_config(self._lg_stab)
 		if self._lg_stab.valid:
