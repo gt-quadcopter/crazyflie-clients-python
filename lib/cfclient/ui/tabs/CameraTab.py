@@ -252,10 +252,10 @@ class CameraTab(Tab, camera_tab_class):
 
 		#defining the logconfig
 		self._log_adc = LogConfig(name="ADC", period_in_ms = 50)
-		self._log_adc.add_variable("adc.A0_f", "uint16_t")
-		self._log_adc.add_variable("adc.A1_f", "uint16_t")
-		self._log_adc.add_variable("adc.A2_f", "uint16_t")
-		self._log_adc.add_variable("adc.A3_f", "uint16_t")
+		self._log_adc.add_variable("adc.A0", "uint16_t")
+		self._log_adc.add_variable("adc.A1", "uint16_t")
+		self._log_adc.add_variable("adc.A2", "uint16_t")
+		self._log_adc.add_variable("adc.A3", "uint16_t")
 				
 		# add log config and activate callbacks if successful
 		self._helper.cf.log.add_config(self._log_adc)
