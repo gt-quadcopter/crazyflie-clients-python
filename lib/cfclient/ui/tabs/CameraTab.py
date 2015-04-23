@@ -51,6 +51,7 @@ from cflib.crazyflie.param import Param
 
 import pdb
 from datetime import datetime
+import math
 
 try:
 	import cv2
@@ -276,11 +277,19 @@ class CameraTab(Tab, camera_tab_class):
 		# update UI data for each proximity sensor
 		for sensor in self._prox_sensors:
 			value = data[sensor['logname']]
-			sensor['val_label'].setText('%4d'%value)
+			distance = value / 4095.0
+			distance = 5.0 * math.exp(-1.0*(distance-0.41)/0.11) + 10
+
+			sensor['val_label'].setText('%3.1fcm'%distance)
 			if value > sensor['threshold']:
 				sensor['color'] = 'red'
 			else:
 				sensor['color'] = 'white'
+
+		# display sonar reading
+		sonar_raw = data[SONAR_LOGNAME]
+		sonar_distance = sonar_raw / 2.8
+		self.label_height_val.setText("%3.1fcm"%sonar_raw)
 		
 
 	def _disconnected(self, link_uri):
