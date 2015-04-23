@@ -64,14 +64,14 @@ camera_tab_class = uic.loadUiType(sys.path[0] +
 
 # set these appropriately for which channels the prox sensors
 # are connected to
-PROX_LEFT_LOGNAME  = 'adc.A0_f'
-PROX_RIGHT_LOGNAME = 'adc.A1_f'
-PROX_FRONT_LOGNAME = 'adc.A2_f'
-SONAR_LOGNAME =		 'adc.A3_f'
+PROX_LEFT_LOGNAME  = 'adc.A0'
+PROX_RIGHT_LOGNAME = 'adc.A1'
+PROX_FRONT_LOGNAME = 'adc.A2'
+SONAR_LOGNAME =		 'adc.A3'
 
-PROX_LEFT_THRESHOLD  = 0.6;
-PROX_RIGHT_THRESHOLD = 0.6;
-PROX_FRONT_THRESHOLD = 0.6;
+PROX_LEFT_THRESHOLD  = int(4095 * 0.6);
+PROX_RIGHT_THRESHOLD = int(4095 * 0.6);
+PROX_FRONT_THRESHOLD = int(4095 * 0.6);
 
 class CameraTab(Tab, camera_tab_class):
 	"""Tab for plotting logging data"""
@@ -203,8 +203,11 @@ class CameraTab(Tab, camera_tab_class):
 
 	def _draw_webcam(self):
 		if self.webcam is not None:
-			# read a frame from the webcam
+			# read a frame from the webcam, bail if we can't read for some reason
 			ret, self.current_frame = self.webcam.read()
+			if self.current_frame is None:
+				return
+
 			frame_height, frame_width, frame_byteValue = self.current_frame.shape
 			frame_ratio = float(frame_width) / float(frame_height)
 
@@ -249,10 +252,10 @@ class CameraTab(Tab, camera_tab_class):
 
 		#defining the logconfig
 		self._log_adc = LogConfig(name="ADC", period_in_ms = 50)
-		self._log_adc.add_variable("adc.A0_f","float")
-		self._log_adc.add_variable("adc.A1_f", "float")
-		self._log_adc.add_variable("adc.A2_f", "float")
-		self._log_adc.add_variable("adc.A3_f", "float")
+		self._log_adc.add_variable("adc.A0_f", "uint16_t")
+		self._log_adc.add_variable("adc.A1_f", "uint16_t")
+		self._log_adc.add_variable("adc.A2_f", "uint16_t")
+		self._log_adc.add_variable("adc.A3_f", "uint16_t")
 				
 		# add log config and activate callbacks if successful
 		self._helper.cf.log.add_config(self._log_adc)
@@ -273,7 +276,7 @@ class CameraTab(Tab, camera_tab_class):
 		# update UI data for each proximity sensor
 		for sensor in self._prox_sensors:
 			value = data[sensor['logname']]
-			sensor['val_label'].setText('%1.3f'%value)
+			sensor['val_label'].setText('%4d'%value)
 			if value > sensor['threshold']:
 				sensor['color'] = 'red'
 			else:
