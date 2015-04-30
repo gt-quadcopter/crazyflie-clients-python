@@ -133,20 +133,25 @@ class CameraTab(Tab, camera_tab_class):
 			{'logname':		PROX_LEFT_LOGNAME,
 			 'threshold':	PROX_LEFT_THRESHOLD,
 			 'val_label':	self.label_left_val,
+			 'val_text':	'0',
 			 'bar_label':	self.label_bar_left,
 			 'color':		'white'},
 
 			{'logname':		PROX_RIGHT_LOGNAME,
 			 'threshold':	PROX_RIGHT_THRESHOLD,
 			 'val_label':	self.label_right_val,
+			 'val_text':	'0',
 			 'bar_label':	self.label_bar_right,
 			 'color':		'white'},
 
 			{'logname':		PROX_FRONT_LOGNAME,
 			 'threshold':	PROX_FRONT_THRESHOLD,
 			 'val_label':	self.label_front_val,
+			 'val_text':	'0',
 			 'bar_label':	self.label_bar_front,
 			 'color':		'white'}]
+
+		self.sonar_text = '0'
 
 
 
@@ -199,6 +204,8 @@ class CameraTab(Tab, camera_tab_class):
 		for sensor in self._prox_sensors:
 			stylesheet = 'background-color: %s;'%sensor['color']
 			sensor['bar_label'].setStyleSheet(stylesheet)
+			sensor['val_label'].setText(sensor['val_text'])
+		self.label_height_val.setText(self.sonar_text)
 
 		self._draw_webcam()
 
@@ -279,8 +286,8 @@ class CameraTab(Tab, camera_tab_class):
 			value = data[sensor['logname']]
 			distance = value / 4095.0
 			distance = 5.0 * math.exp(-1.0*(distance-0.41)/0.11) + 10
+			sensor['val_text'] = "%3.1fcm"%distance
 
-			sensor['val_label'].setText('%3.1fcm'%distance)
 			if value > sensor['threshold']:
 				sensor['color'] = 'red'
 			else:
@@ -289,7 +296,7 @@ class CameraTab(Tab, camera_tab_class):
 		# display sonar reading
 		sonar_raw = data[SONAR_LOGNAME]
 		sonar_distance = sonar_raw / 2.8
-		self.label_height_val.setText("%3.1fcm"%sonar_raw)
+		self.sonar_text = "%3.1fcm"%sonar_distance
 		
 
 	def _disconnected(self, link_uri):
